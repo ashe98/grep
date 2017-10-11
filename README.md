@@ -10,7 +10,7 @@ options implemented :
      beginning of the line or preceded by a non word constituent or at the end
      of the line or followed by a non word constituent.
 -c : prints the number of matching lines.
--m : prints only specified nummber of matched lines.
+-m : prints only specified number of matched lines.
 -b : prints the number of bytes read before the matched line.
 -q : does not print anything to standard output, exits with zero status if any
      match was found, even if any error was detected.
