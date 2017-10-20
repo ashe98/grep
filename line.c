@@ -23,8 +23,16 @@ void initLines(Lines *l) {
 void addLine(Lines *l, char *s) {
 	node *x;
 	int len;
+	if(!s)
+		return;
 	x = (node*)malloc(sizeof(node));
+	if(!x)
+		return;
 	x->str = (char*)malloc(strlen(s) + 1);
+	if(x->str == NULL) {
+		free(x);
+		return;
+	}
 	strcpy(x->str, s);
 	len = length(*l);
 	if(len == 0) {
@@ -40,10 +48,11 @@ void addLine(Lines *l, char *s) {
 }
 void destroyLines(Lines *l) {
 	node *tmp = l->head->next;
-	while(1) {
+	while(l->head != NULL) {
 		if(tmp == NULL) {
 			free(l->tail->str);
 			free(l->tail);
+			l->head = l->tail = NULL;
 			break;
 		}
 		else {
@@ -90,7 +99,7 @@ void grep(Lines *l, char *word, int fi) {
 		}
 	}
 	else {
-		while(tmp != NULL) { 
+		while(tmp != NULL) {
 			text = tmp->str;
 			while(text[j]) {
 				while(text[j] && word[i]) {
@@ -105,7 +114,7 @@ void grep(Lines *l, char *word, int fi) {
 				}
 				if(word[i] == '\0') {
 						start = j - (i - 1) - 1;
-						tmp->occ[tmp->occount] = start;
+						tmp->occ[tmp->occount] = start;		
 						(tmp->occount)++;
 						j = start + 1;
 						i = 0;
@@ -124,6 +133,7 @@ void grep(Lines *l, char *word, int fi) {
  *by a non-word constituent
  */
 void grepw(Lines *l, char *word, int fi) {
+	int i = 0;
 	node *tmp;
 	char *text = NULL, *ptr = NULL, *found = NULL;
 	tmp = l->head;
@@ -134,10 +144,16 @@ void grepw(Lines *l, char *word, int fi) {
 			do {
 				found = strcasestr(ptr, word);
 				if(found != NULL) {
-					if(found[strlen(word)] == '\n' || (!isdigit(found[strlen(word)]) && !isalpha(found[strlen(word)]))) {
-						if(!isdigit(found[-1]) && !isalpha(found[-1])) {
+					if(found[strlen(word)] == '\n' || (!isdigit(found[strlen(word)]) && !isalpha(found[strlen(word)])) && found[strlen(word)] != '_') {
+						if(found == text) {
 							tmp->occ[tmp->occount] = found - text;
 							(tmp->occount)++;
+						}
+						else {
+							if(!isdigit(found[-1]) && !isalpha(found[-1]) && found[-1] != '_') {
+								tmp->occ[tmp->occount] = found - text;
+								(tmp->occount)++;
+							}
 						}
 					}
 					ptr = found + strlen(word);
@@ -155,9 +171,17 @@ void grepw(Lines *l, char *word, int fi) {
 			do {
 				found = strstr(ptr, word);
 				if(found != NULL) {
-					if(found[strlen(word)] == '\n' || (!isdigit(found[strlen(word)]) && !isalpha(found[strlen(word)]))) {
-						tmp->occ[tmp->occount] = found - text;
-						(tmp->occount)++;
+					if(found[strlen(word)] == '\n' || (!isdigit(found[strlen(word)]) && !isalpha(found[strlen(word)])) && found[strlen(word)] != '_') {
+						if(found == text) {
+							tmp->occ[tmp->occount] = found - text;
+							(tmp->occount)++;
+						}
+						else {
+							if(!isdigit(found[-1]) && !isalpha(found[-1])) {
+								tmp->occ[tmp->occount] = found - text;
+								(tmp->occount)++;
+							}
+						}
 					}
 					ptr = found + strlen(word);
 				}
@@ -171,8 +195,9 @@ void grepw(Lines *l, char *word, int fi) {
 /*Finds the position of occurence of the pattern and the position 
  *of the end of the pattern in the node
  *and then stores these two positions in the occ[] array of node
+ *The user need not call printLines()
  */
-void grepf(Lines *l, optqueue oq, int fw, int fi, char *file2, char *file1) {
+void grepf(Lines *l, int fw, int fi, char *file2) {
 	FILE *fp1;
 	size_t len = 0;
 	node *tmp;
@@ -180,8 +205,8 @@ void grepf(Lines *l, optqueue oq, int fw, int fi, char *file2, char *file1) {
 	char *word = NULL, *text = NULL, *ptr = NULL, *found = NULL;
 	fp1 = fopen(file2, "r");
 	if(fp1 == NULL) {
-		perror("Open failed:");
-		exit(errno);
+		fprintf(stderr, "%s : No such file or directory\n", file2);
+		exit(0);
 	}
 	if(fw) {
 		while(getline(&word, &len, fp1) != -1) {
@@ -220,10 +245,12 @@ void grepf(Lines *l, optqueue oq, int fw, int fi, char *file2, char *file1) {
 						found = strstr(ptr, word);
 						if(found != NULL) {
 							if(found[strlen(word)] == '\n' || (!isdigit(found[strlen(word)]) && !isalpha(found[strlen(word)]))) {
-								tmp->occ[tmp->occount] = found - text;
-								(tmp->occount)++;
-								tmp->occ[tmp->occount] = found + strlen(word) - text - 1;
-								(tmp->occount)++;
+								if(!isdigit(found[-1]) && !isalpha(found[-1])) {
+									tmp->occ[tmp->occount] = found - text;
+									(tmp->occount)++;
+									tmp->occ[tmp->occount] = found + strlen(word) - text - 1;
+									(tmp->occount)++;
+								}
 							}
 							ptr = found + strlen(word);
 						}
@@ -293,7 +320,15 @@ void grepf(Lines *l, optqueue oq, int fw, int fi, char *file2, char *file1) {
 		}
 		free(word);
 	}
-	printLines(*l, oq, NULL, file1, 1);
+}
+int search(Lines *l) {
+	node *tmp;
+	tmp = l->head;
+	while(tmp != NULL) {
+		if(tmp->occ[0] != -1)
+			return 0;
+	}
+	return 1;
 }
 void printLines(Lines l, optqueue oq, char *word, char *filename, int ff) {
 	int H = 0, h = 0, b = 0, c = 0, v = 0, m = 0, mNUM = -1, count = 0, bytes = 0;
