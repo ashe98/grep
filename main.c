@@ -16,10 +16,10 @@ optqueue o;
 void grepr(char *dirname) {
 	DIR *dir;
 	FILE *fp;
+	struct stat st;
 	Lines l;
 	size_t len = 0;
 	char *line = NULL;
-	int s;
 	initLines(&l);
 	struct dirent *d;
 	char temp[256] = "", *tmp = NULL;
@@ -41,13 +41,20 @@ void grepr(char *dirname) {
 			strcat(temp, dirname);
 			strcat(temp, "/");
 			strcat(temp, d->d_name);
+			if(stat(temp, &st) == 0 && st.st_mode & S_IXUSR)
+				continue;
 			fp = fopen(temp, "r");
 			if(!fp)
 				continue;		
 			while(getline(&line, &len, fp) != -1) {
 				addLine(&l, line);
 			}
-			fclose(fp); 
+			if(line) {
+				free(line);
+				line = NULL;
+				len = 0;
+			}
+			fclose(fp); 	
 			if(fw)
 				grepw(&l, word, fi);
 			else
@@ -67,10 +74,10 @@ void grepr(char *dirname) {
 }
 int main(int argc, char *argv[]) {
 	DIR *dir;
-	struct dirent *d;
 	int mNUM, filepos = 1, opt, i, s;
-	char *file1, *file2, *line = NULL;;
+	char *file2, *line = NULL;;
 	size_t len = 0;
+	struct stat st;
 	fi = fr = ff = fw = fv = fH = fh = fb = fc = fm = fq = 0;
 	Lines l;
 	FILE *fp;
@@ -153,6 +160,8 @@ int main(int argc, char *argv[]) {
 		oenq(&o, 'm');
 		oenq(&o, mNUM + '0');
 	}
+	if(fr && fq)
+		return 0;
 	word = argv[filepos];
 	if(ff) {
 		for(i = filepos; i < argc; i++) {
@@ -164,6 +173,11 @@ int main(int argc, char *argv[]) {
 			while(getline(&line, &len, fp) != -1) {
 				addLine(&l, line);
 			}
+			if(line) {
+				free(line);
+				line = NULL;
+				len = 0;
+			}
 			grepf(&l, fw, fi, file2);
 			if(fq) {
 				s = search(&l);
@@ -171,6 +185,7 @@ int main(int argc, char *argv[]) {
 			}
 			printLines(l, o, NULL, argv[i], ff);
 			destroyLines(&l);
+			fclose(fp);
 		}
 		return 0;
 	}
@@ -184,12 +199,17 @@ int main(int argc, char *argv[]) {
 			grepr(".");
 		else {
 			if((dir = opendir(argv[filepos + 1])) == NULL) {
-				fprintf(stderr, "%s : No such file or directory\n", argv[filepos + 1]);
+				stat(argv[filepos + 1], &st);
+				if(!S_ISREG(st.st_mode)) {
+					fprintf(stderr, "%s : No such file or directory\n", argv[filepos + 1]);
+					return 0;
+				}
+			}
+			else {
+				grepr(argv[filepos + 1]);
 				return 0;
 			}
-			grepr(argv[filepos + 1]);
 		}
-		return 0;
 	}	
 	for(i = filepos + 1; i < argc; i++) {
 		if(fw) {
@@ -201,6 +221,11 @@ int main(int argc, char *argv[]) {
 			while(getline(&line, &len, fp) != -1) {
 				addLine(&l, line);
 			}
+			if(line) {
+				free(line);
+				line = NULL;
+				len = 0;
+			}
 			grepw(&l, word, fi);
 			if(fq) {
 				s = search(&l);
@@ -208,6 +233,7 @@ int main(int argc, char *argv[]) {
 			}
 			printLines(l, o, word, argv[i], ff);
 			destroyLines(&l);
+			fclose(fp);
 		}
 		else {
 			fp = fopen(argv[i], "r");
@@ -218,6 +244,11 @@ int main(int argc, char *argv[]) {
 			while(getline(&line, &len, fp) != -1) {
 				addLine(&l, line);
 			}
+			if(line) {
+				free(line);
+				line = NULL;
+				len = 0;
+			}
 			grep(&l, word, fi);
 			if(fq) {
 				s = search(&l);
@@ -225,6 +256,7 @@ int main(int argc, char *argv[]) {
 			}
 			printLines(l, o, word, argv[i], ff);
 			destroyLines(&l);
+			fclose(fp);
 		}
 	}
 	return 0;

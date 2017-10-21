@@ -47,7 +47,9 @@ void addLine(Lines *l, char *s) {
 	l->tail = x;
 }
 void destroyLines(Lines *l) {
-	node *tmp = l->head->next;
+	node *tmp = NULL;
+	if(l->head != NULL)
+		tmp = l->head->next;
 	while(l->head != NULL) {
 		if(tmp == NULL) {
 			free(l->tail->str);
@@ -77,7 +79,7 @@ int length(Lines l) {
  *of multiple occurrences in each node if found in occ[]
  */
 void grep(Lines *l, char *word, int fi) {
-	node *tmp;
+	node *tmp = NULL;
 	char *text = NULL, *ptr = NULL, *found = NULL;
 	int i = 0, j = 0, start = 0;
 	tmp = l->head;
@@ -133,7 +135,6 @@ void grep(Lines *l, char *word, int fi) {
  *by a non-word constituent
  */
 void grepw(Lines *l, char *word, int fi) {
-	int i = 0;
 	node *tmp;
 	char *text = NULL, *ptr = NULL, *found = NULL;
 	tmp = l->head;
@@ -144,7 +145,7 @@ void grepw(Lines *l, char *word, int fi) {
 			do {
 				found = strcasestr(ptr, word);
 				if(found != NULL) {
-					if(found[strlen(word)] == '\n' || (!isdigit(found[strlen(word)]) && !isalpha(found[strlen(word)])) && found[strlen(word)] != '_') {
+					if(found[strlen(word)] == '\n' || ((!isdigit(found[strlen(word)]) && !isalpha(found[strlen(word)])) && found[strlen(word)] != '_')) {
 						if(found == text) {
 							tmp->occ[tmp->occount] = found - text;
 							(tmp->occount)++;
@@ -171,7 +172,7 @@ void grepw(Lines *l, char *word, int fi) {
 			do {
 				found = strstr(ptr, word);
 				if(found != NULL) {
-					if(found[strlen(word)] == '\n' || (!isdigit(found[strlen(word)]) && !isalpha(found[strlen(word)])) && found[strlen(word)] != '_') {
+					if(found[strlen(word)] == '\n' || ((!isdigit(found[strlen(word)]) && !isalpha(found[strlen(word)])) && found[strlen(word)] != '_')) {
 						if(found == text) {
 							tmp->occ[tmp->occount] = found - text;
 							(tmp->occount)++;
@@ -261,7 +262,11 @@ void grepf(Lines *l, int fw, int fi, char *file2) {
 				}
 			}
 		}
-		free(word);
+		if(word) {
+				free(word);
+				word = NULL;
+				len = 0;
+		}
 	}
 	else {
 		while(getline(&word, &len, fp1) != -1) {
@@ -427,7 +432,7 @@ void printLines(Lines l, optqueue oq, char *word, char *filename, int ff) {
 		return;
 	}
 	tmp = l.head;
-	while(tmp != NULL && mNUM != 0) {
+	while(tmp != NULL && mNUM != 0) {	
 		if(v) {	
 			if(tmp->occ[0] == -1) {
 				if(H == 1 && h == 0)
