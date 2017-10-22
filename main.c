@@ -16,7 +16,6 @@ optqueue o;
 void grepr(char *dirname) {
 	DIR *dir;
 	FILE *fp;
-	struct stat st;
 	Lines l;
 	size_t len = 0;
 	char *line = NULL;
@@ -41,8 +40,6 @@ void grepr(char *dirname) {
 			strcat(temp, dirname);
 			strcat(temp, "/");
 			strcat(temp, d->d_name);
-			if(stat(temp, &st) == 0 && st.st_mode & S_IXUSR)
-				continue;
 			fp = fopen(temp, "r");
 			if(!fp)
 				continue;		

@@ -25,7 +25,7 @@ void addLine(Lines *l, char *s) {
 	int len;
 	if(!s)
 		return;
-	x = (node*)malloc(sizeof(node));
+	x = (node*)calloc(1, sizeof(node));
 	if(!x)
 		return;
 	x->str = (char*)malloc(strlen(s) + 1);
@@ -202,7 +202,6 @@ void grepf(Lines *l, int fw, int fi, char *file2) {
 	FILE *fp1;
 	size_t len = 0;
 	node *tmp;
-	int i, j, start;
 	char *word = NULL, *text = NULL, *ptr = NULL, *found = NULL;
 	fp1 = fopen(file2, "r");
 	if(fp1 == NULL) {
@@ -213,7 +212,6 @@ void grepf(Lines *l, int fw, int fi, char *file2) {
 		while(getline(&word, &len, fp1) != -1) {
 			text = NULL, ptr = NULL, found = NULL;
 			word[strlen(word) - 1] = '\0';
-			i = 0;
 			tmp = l->head;
 			if(fi) {
 				while(tmp != NULL) {
@@ -222,12 +220,20 @@ void grepf(Lines *l, int fw, int fi, char *file2) {
 					do {
 						found = strcasestr(ptr, word);
 						if(found != NULL) {
-							if(found[strlen(word)] == '\n' || (!isdigit(found[strlen(word)]) && !isalpha(found[strlen(word)]))) {
-								if(!isdigit(found[-1]) && !isalpha(found[-1])) {
+							if(found[strlen(word)] == '\n' || ((!isdigit(found[strlen(word)]) && !isalpha(found[strlen(word)]) && found[strlen(word)] != '_'))) {
+								if(found == text) {
 									tmp->occ[tmp->occount] = found - text;
 									(tmp->occount)++;
 									tmp->occ[tmp->occount] = found + strlen(word) - text - 1;
 									(tmp->occount)++;
+								}
+								else {
+									if(!isdigit(found[-1]) && !isalpha(found[-1])) {
+										tmp->occ[tmp->occount] = found - text;
+										(tmp->occount)++;
+										tmp->occ[tmp->occount] = found + strlen(word) - text - 1;
+										(tmp->occount)++;
+									}
 								}
 							}
 							ptr = found + strlen(word);
@@ -245,12 +251,20 @@ void grepf(Lines *l, int fw, int fi, char *file2) {
 					do {
 						found = strstr(ptr, word);
 						if(found != NULL) {
-							if(found[strlen(word)] == '\n' || (!isdigit(found[strlen(word)]) && !isalpha(found[strlen(word)]))) {
-								if(!isdigit(found[-1]) && !isalpha(found[-1])) {
+							if(found[strlen(word)] == '\n' || (!isdigit(found[strlen(word)]) && !isalpha(found[strlen(word)]) && found[strlen(word)] != '_')) {
+								if(found == text) {
 									tmp->occ[tmp->occount] = found - text;
 									(tmp->occount)++;
 									tmp->occ[tmp->occount] = found + strlen(word) - text - 1;
 									(tmp->occount)++;
+								}
+								else {
+									if(!isdigit(found[-1]) && !isalpha(found[-1])) {
+										tmp->occ[tmp->occount] = found - text;
+										(tmp->occount)++;
+										tmp->occ[tmp->occount] = found + strlen(word) - text - 1;
+										(tmp->occount)++;
+									}
 								}
 							}
 							ptr = found + strlen(word);
@@ -263,14 +277,13 @@ void grepf(Lines *l, int fw, int fi, char *file2) {
 			}
 		}
 		if(word) {
-				free(word);
-				word = NULL;
-				len = 0;
+			free(word);	
+			word = NULL;
+			len = 0;
 		}
 	}
 	else {
 		while(getline(&word, &len, fp1) != -1) {
-			i = 0, j = 0, start = 0;
 			word[strlen(word) - 1] = '\0';
 			tmp = l->head;
 			if(fi) {
@@ -295,35 +308,28 @@ void grepf(Lines *l, int fw, int fi, char *file2) {
 			else {
 				while(tmp != NULL) { 
 					text = tmp->str;
-					while(text[j]) {
-						while(text[j] && word[i]) {
-							if(text[j] == word[i]) {
-								j++;
-								i++;
-							}
-							else {
-								j = j - (i - 1);
-								i = 0;
-							}
+					ptr = text;
+					do {
+						found = strstr(ptr, word);
+						if(found != NULL) {
+							tmp->occ[tmp->occount] = found - text;
+							(tmp->occount)++;
+							tmp->occ[tmp->occount] = found + strlen(word) - text - 1;
+							(tmp->occount)++;
+							ptr = found + strlen(word);
 						}
-						if(word[i] == '\0') {
-								start = j - (i - 1) - 1;
-								tmp->occ[tmp->occount] = start;
-								(tmp->occount)++;
-								tmp->occ[tmp->occount] = start + strlen(word) - 1;
-								j = start + 1;
-								i = 0;
-						}
-					}
+					}while(found != NULL);
 					if(tmp->occount == 0)
-						tmp->occ[0] = -1; 
+						tmp->occ[0] = -1;
 					tmp = tmp->next;
-					i = 0;
-					j = 0;
 				}
 			}
 		}
-		free(word);
+		if(word) {
+			free(word);
+			word = NULL;
+			len = 0;
+		}
 	}
 }
 int search(Lines *l) {
@@ -473,7 +479,17 @@ void printMatched(node n, int len) {
 }
 void printMatchedf(node n) {
 	char *text = n.str, *ptr = text, w[1024] = "";
-	int i, j, count = 0;
+	int i, j;
+	for(i = 0; i < n.occount; i++) {
+		if(n.occ[i] == -1)
+			continue;
+		for(j = i + 1; j < n.occount; j++) {
+			if(n.occ[i] == n.occ[j]) {
+				n.occ[j] = -1;
+				n.occ[j + 1] = -1;
+			}
+		} 
+	}
 	for(i = 0; i < strlen(text); i++) {
 		for(j = 0; j < n.occount; j++) {
 			if(i == n.occ[j])
@@ -485,7 +501,6 @@ void printMatchedf(node n) {
 			printf(BOLDRED  "%s"  ANSI_COLOR_RESET, w);
 			strcpy(w, "");
 			i += n.occ[j + 1] - n.occ[j];
-			count += 2;
 		}
 		else
 			putchar(text[i]);
