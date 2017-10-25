@@ -131,7 +131,7 @@ void grep(Lines *l, char *word, int fi) {
 	}
 }
 /*Works the same as grep() function but checks if *word is not a 
- *character sequence by checking if it is both preceded and succeeded
+ *character sequence by checking if it is both preceeded and succeeded
  *by a non-word constituent
  */
 void grepw(Lines *l, char *word, int fi) {
@@ -178,7 +178,7 @@ void grepw(Lines *l, char *word, int fi) {
 							(tmp->occount)++;
 						}
 						else {
-							if(!isdigit(found[-1]) && !isalpha(found[-1])) {
+							if(!isdigit(found[-1]) && !isalpha(found[-1]) && found[-1] != '_') {
 								tmp->occ[tmp->occount] = found - text;
 								(tmp->occount)++;
 							}
@@ -208,7 +208,7 @@ void grepf(Lines *l, int fw, int fi, char *file2) {
 		fprintf(stderr, "%s : No such file or directory\n", file2);
 		exit(0);
 	}
-	if(fw) {
+	if(fw) {		
 		while(getline(&word, &len, fp1) != -1) {
 			text = NULL, ptr = NULL, found = NULL;
 			word[strlen(word) - 1] = '\0';
@@ -228,7 +228,7 @@ void grepf(Lines *l, int fw, int fi, char *file2) {
 									(tmp->occount)++;
 								}
 								else {
-									if(!isdigit(found[-1]) && !isalpha(found[-1])) {
+									if(!isdigit(found[-1]) && !isalpha(found[-1]) && found[-1] != '_') {
 										tmp->occ[tmp->occount] = found - text;
 										(tmp->occount)++;
 										tmp->occ[tmp->occount] = found + strlen(word) - text - 1;
@@ -259,7 +259,7 @@ void grepf(Lines *l, int fw, int fi, char *file2) {
 									(tmp->occount)++;
 								}
 								else {
-									if(!isdigit(found[-1]) && !isalpha(found[-1])) {
+									if(!isdigit(found[-1]) && !isalpha(found[-1]) && found[-1] != '_') {
 										tmp->occ[tmp->occount] = found - text;
 										(tmp->occount)++;
 										tmp->occ[tmp->occount] = found + strlen(word) - text - 1;
@@ -306,8 +306,8 @@ void grepf(Lines *l, int fw, int fi, char *file2) {
 				}
 			}
 			else {
-				while(tmp != NULL) { 
-					text = tmp->str;
+				while(tmp != NULL) {
+					text = tmp->str;	printf("%s\n", text);
 					ptr = text;
 					do {
 						found = strstr(ptr, word);
@@ -480,7 +480,7 @@ void printMatched(node n, int len) {
 void printMatchedf(node n) {
 	char *text = n.str, *ptr = text, w[1024] = "";
 	int i, j;
-	for(i = 0; i < n.occount; i++) {
+	/*for(i = 0; i < n.occount; i++) {
 		if(n.occ[i] == -1)
 			continue;
 		for(j = i + 1; j < n.occount; j++) {
@@ -489,8 +489,12 @@ void printMatchedf(node n) {
 				n.occ[j + 1] = -1;
 			}
 		} 
+	}*/
+	for(i = 0; i < n.occount; i++) {
+		printf("%d ", n.occ[i]);
 	}
-	for(i = 0; i < strlen(text); i++) {
+	printf("\n");
+	/*for(i = 0; i < strlen(text); i++) {
 		for(j = 0; j < n.occount; j++) {
 			if(i == n.occ[j])
 				break;
@@ -504,5 +508,5 @@ void printMatchedf(node n) {
 		}
 		else
 			putchar(text[i]);
-	}
+	}*/
 }
