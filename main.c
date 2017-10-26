@@ -202,10 +202,11 @@ int main(int argc, char *argv[]) {
 					return 0;
 				}
 			}
-			else {
-				grepr(argv[filepos + 1]);
-				return 0;
+			closedir(dir);
+			for(i = filepos + 1; i < argc; i++) {
+				grepr(argv[i]);
 			}
+			return 0;
 		}
 	}	
 	for(i = filepos + 1; i < argc; i++) {

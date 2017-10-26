@@ -307,7 +307,7 @@ void grepf(Lines *l, int fw, int fi, char *file2) {
 			}
 			else {
 				while(tmp != NULL) {
-					text = tmp->str;	printf("%s\n", text);
+					text = tmp->str;
 					ptr = text;
 					do {
 						found = strstr(ptr, word);
@@ -344,7 +344,9 @@ int search(Lines *l) {
 void printLines(Lines l, optqueue oq, char *word, char *filename, int ff) {
 	int H = 0, h = 0, b = 0, c = 0, v = 0, m = 0, mNUM = -1, count = 0, bytes = 0;
 	node *tmp;
-	char op = odeq(&oq);
+	char op;
+	if(!oqempty(&oq))
+		op = odeq(&oq);
 	if(op == 'H') {
 		H = 1;
 		if(!oqempty(&oq))
@@ -480,7 +482,7 @@ void printMatched(node n, int len) {
 void printMatchedf(node n) {
 	char *text = n.str, *ptr = text, w[1024] = "";
 	int i, j;
-	/*for(i = 0; i < n.occount; i++) {
+	for(i = 0; i < n.occount; i++) {
 		if(n.occ[i] == -1)
 			continue;
 		for(j = i + 1; j < n.occount; j++) {
@@ -489,12 +491,8 @@ void printMatchedf(node n) {
 				n.occ[j + 1] = -1;
 			}
 		} 
-	}*/
-	for(i = 0; i < n.occount; i++) {
-		printf("%d ", n.occ[i]);
 	}
-	printf("\n");
-	/*for(i = 0; i < strlen(text); i++) {
+	for(i = 0; i < strlen(text); i++) {
 		for(j = 0; j < n.occount; j++) {
 			if(i == n.occ[j])
 				break;
@@ -508,5 +506,5 @@ void printMatchedf(node n) {
 		}
 		else
 			putchar(text[i]);
-	}*/
+	}
 }
