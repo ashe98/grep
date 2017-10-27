@@ -133,9 +133,9 @@ int main(int argc, char *argv[]) {
 				return 0;
 		}
 	}
-	if(argc == 1) {
+	if(argc <= 2) {
 			printf("Usage: grep [OPTION]... PATTERN [FILE]...\n");
-			return 0;
+			return EINVAL;
 	}			
 	if((filepos + 1 != argc) && ff)
 		fH = 1;
@@ -190,7 +190,7 @@ int main(int argc, char *argv[]) {
 	if(fr) {
 		if(argc == 2) {
 			printf("Usage: grep [OPTION]... PATTERN [FILE]...\n");
-			return 0;
+			return EINVAL;
 		}
 		if(filepos + 1 == argc)
 			grepr(".");

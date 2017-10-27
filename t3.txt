@@ -21,4 +21,3 @@ hey hello this is your caption speaking
 sorry, capTain....HeLlohelloHELLO hello 
 underscore can also be a part of a word so if your search for hello with -w it wont print this _hello
 _hello_
-
