@@ -145,7 +145,10 @@ void grepw(Lines *l, char *word, int fi) {
 			do {
 				found = strcasestr(ptr, word);
 				if(found != NULL) {
-					if(found[strlen(word)] == '\n' || ((!isdigit(found[strlen(word)]) && !isalpha(found[strlen(word)])) && found[strlen(word)] != '_')) {
+					if(found[strlen(word)] == '\n' || ((!isdigit(found[strlen(word)]) && 
+						!isalpha(found[strlen(word)])) &&
+							 found[strlen(word)] != '_'))
+					{
 						if(found == text) {
 							tmp->occ[tmp->occount] = found - text;
 							(tmp->occount)++;
@@ -172,7 +175,10 @@ void grepw(Lines *l, char *word, int fi) {
 			do {
 				found = strstr(ptr, word);
 				if(found != NULL) {
-					if(found[strlen(word)] == '\n' || ((!isdigit(found[strlen(word)]) && !isalpha(found[strlen(word)])) && found[strlen(word)] != '_')) {
+					if(found[strlen(word)] == '\n' || ((!isdigit(found[strlen(word)]) &&
+						!isalpha(found[strlen(word)])) &&
+							 found[strlen(word)] != '_'))
+					{
 						if(found == text) {
 							tmp->occ[tmp->occount] = found - text;
 							(tmp->occount)++;
@@ -211,7 +217,8 @@ void grepf(Lines *l, int fw, int fi, char *file2) {
 	if(fw) {		
 		while(getline(&word, &len, fp1) != -1) {
 			text = NULL, ptr = NULL, found = NULL;
-			word[strlen(word) - 1] = '\0';
+			if(strcmp(word, "\n") != 0)
+				word[strlen(word) - 1] = '\0';
 			tmp = l->head;
 			if(fi) {
 				while(tmp != NULL) {
@@ -284,7 +291,8 @@ void grepf(Lines *l, int fw, int fi, char *file2) {
 	}
 	else {
 		while(getline(&word, &len, fp1) != -1) {
-			word[strlen(word) - 1] = '\0';
+			if(strcmp(word, "\n") != 0)
+				word[strlen(word) - 1] = '\0';
 			tmp = l->head;
 			if(fi) {
 				while(tmp != NULL) {
@@ -440,7 +448,7 @@ void printLines(Lines l, optqueue oq, char *word, char *filename, int ff) {
 		return;
 	}
 	tmp = l.head;
-	while(tmp != NULL && mNUM != 0) {	
+	while(tmp != NULL && mNUM != 0) {
 		if(v) {	
 			if(tmp->occ[0] == -1) {
 				if(H == 1 && h == 0)
@@ -482,19 +490,9 @@ void printMatched(node n, int len) {
 void printMatchedf(node n) {
 	char *text = n.str, *ptr = text, w[1024] = "";
 	int i, j;
-	for(i = 0; i < n.occount; i++) {
-		if(n.occ[i] == -1)
-			continue;
-		for(j = i + 1; j < n.occount; j++) {
-			if(n.occ[i] == n.occ[j]) {
-				n.occ[j] = -1;
-				n.occ[j + 1] = -1;
-			}
-		} 
-	}
 	for(i = 0; i < strlen(text); i++) {
 		for(j = 0; j < n.occount; j++) {
-			if(i == n.occ[j])
+			if(i == n.occ[j] && j % 2 == 0)
 				break;
 		}
 		if(j != n.occount) {

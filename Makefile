@@ -1,5 +1,5 @@
-g: main.o line.o optqueue.o
-	cc main.o line.o optqueue.o -o g
+project: main.o line.o optqueue.o
+	cc main.o line.o optqueue.o -o project
 main.o: main.c line.h optqueue.h
 	cc -Wall -c main.c
 line.o: line.c line.h optqueue.h
