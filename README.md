@@ -1,6 +1,4 @@
-Project : grep
-Name : Asher Everen
-MIS : 111608022
+**grep**
 
 options implemented :
 
